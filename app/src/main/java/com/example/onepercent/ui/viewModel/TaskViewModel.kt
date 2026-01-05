@@ -17,9 +17,13 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
     private val _normalTask = MutableStateFlow<List<TaskEntity>>(emptyList())
     val normalTask : StateFlow<List<TaskEntity>> = _normalTask.asStateFlow()
 
+    private val _completedNormalTasks = MutableStateFlow<List<TaskEntity>>(emptyList())
+    val completedNormalTasks: StateFlow<List<TaskEntity>> = _completedNormalTasks.asStateFlow()
+
     init {
         loadPriorityTask()
         loadNormalTask()
+        completedNormalTask()
     }
 
     private fun loadPriorityTask(){
@@ -38,6 +42,14 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
         }
     }
 
+    private fun completedNormalTask(){
+        viewModelScope.launch {
+            repository.completedNormalTasks.collect { task->
+                _completedNormalTasks.value = task
+            }
+        }
+    }
+
     fun addTask(name: String,isPriority: Boolean){
         viewModelScope.launch {
             val task = TaskEntity(name = name, isPriority = isPriority)
@@ -47,6 +59,15 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
     fun updateTask(taskEntity: TaskEntity){
         viewModelScope.launch {
             repository.update(taskEntity)
+        }
+    }
+    fun toggleTaskCompletion(task: TaskEntity) {
+        viewModelScope.launch {
+            val updatedTask = task.copy(
+                isCompleted = !task.isCompleted,
+                completedDate = if (!task.isCompleted) System.currentTimeMillis() else null
+            )
+            repository.update(updatedTask)
         }
     }
     fun deleteTask(taskEntity: TaskEntity){

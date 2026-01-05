@@ -62,8 +62,3 @@ fun AddTaskDialog(
         }
     )
 }
-
-fun getCurrentDate(): String {
-    val dateFormat = SimpleDateFormat("EEEE, MMMM dd, yyyy", Locale.getDefault())
-    return dateFormat.format(Date())
-}

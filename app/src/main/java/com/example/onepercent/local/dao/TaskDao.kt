@@ -20,6 +20,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE isPriority= 0 ORDER BY createdDate ASC")
     fun getNormalTasks(): Flow<List<TaskEntity>>
 
+    @Query("SELECT * FROM tasks WHERE isPriority = 0 AND isCompleted = 1 ORDER BY completedDate DESC")
+    fun getCompletedNormalTasks(): Flow<List<TaskEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(task : TaskEntity)
 

@@ -1,8 +1,9 @@
 package com.example.onepercent.ui.screens.Home
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -13,13 +14,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.onepercent.ui.components.AddTaskDialog
 import com.example.onepercent.ui.components.TaskItem
-import com.example.onepercent.ui.components.getCurrentDate
 import com.example.onepercent.ui.viewModel.TaskViewModel
-import java.util.*
+import com.example.onepercent.utils.getCurrentDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(viewModel: TaskViewModel) {
+fun DashboardScreenUi(
+    viewModel: TaskViewModel,
+    onNavigateToHistory: () -> Unit
+) {
     val priorityTasks by viewModel.priorityTask.collectAsState()
     val normalTasks by viewModel.normalTask.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
@@ -56,7 +59,7 @@ fun DashboardScreen(viewModel: TaskViewModel) {
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
             // Priority Tasks Section
             item {
@@ -77,8 +80,14 @@ fun DashboardScreen(viewModel: TaskViewModel) {
                     )
                 }
             } else {
-                items(priorityTasks) { task ->
-                    TaskItem(task = task, onDelete = { viewModel.deleteTask(task) })
+                itemsIndexed(priorityTasks) { index, task ->
+                    TaskItem(
+                        task = task,
+                        index = index,
+                        totalCount = priorityTasks.size,
+                        onDelete = { viewModel.deleteTask(task) },
+                        onToggleComplete = { /*viewModel.toggleTaskCompletion(task)*/ }
+                    )
                 }
             }
 
@@ -102,8 +111,21 @@ fun DashboardScreen(viewModel: TaskViewModel) {
                     )
                 }
             } else {
-                items(normalTasks) { task ->
-                    TaskItem(task = task, onDelete = { viewModel.deleteTask(task) })
+                itemsIndexed(normalTasks) { index, task ->
+                    TaskItem(
+                        task = task,
+                        index = index,
+                        totalCount = normalTasks.size,
+                        onDelete = { viewModel.deleteTask(task) },
+                        onToggleComplete = { viewModel.toggleTaskCompletion(task) }
+                    )
+                }
+            }
+            item {
+                TextButton(
+                    onClick = onNavigateToHistory
+                ) {
+                    Text("View History")
                 }
             }
         }

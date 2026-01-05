@@ -9,5 +9,7 @@ data class TaskEntity(
     val id : Int = 0,
     val name : String = "",
     val isPriority : Boolean,
+    val isCompleted: Boolean = false,
+    val completedDate: Long? = null,
     val createdDate: Long = System.currentTimeMillis()
 )

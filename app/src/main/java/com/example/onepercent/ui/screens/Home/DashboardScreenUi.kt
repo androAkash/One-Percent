@@ -26,13 +26,13 @@ fun DashboardScreenUi(
     val priorityTasks by viewModel.priorityTask.collectAsState()
     val normalTasks by viewModel.normalTask.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
-
+//session
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Column {
-                        Text("Habit Tracker", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text("1 percent", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                         Text(
                             text = getCurrentDate(),
                             fontSize = 14.sp,

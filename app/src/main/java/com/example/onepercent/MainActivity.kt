@@ -21,7 +21,8 @@ import com.example.onepercent.ui.viewModel.TaskViewModelFactory
 class MainActivity : ComponentActivity() {
     private val viewModel: TaskViewModel by viewModels {
         val database = TaskDatabase.getDatabase(applicationContext)
-        val repository = TaskRepository(database.taskDao())
+        val repository = TaskRepository(database.taskDao(),
+            database.priorityCompletionDao())
         TaskViewModelFactory(repository)
     }
     override fun onCreate(savedInstanceState: Bundle?) {

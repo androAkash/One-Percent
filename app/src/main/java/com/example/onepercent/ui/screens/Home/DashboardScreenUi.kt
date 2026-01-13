@@ -16,6 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
+import com.example.onepercent.navigation.ArchiveScreen
+import com.example.onepercent.navigation.HistoryScreen
 import com.example.onepercent.ui.components.AddTaskDialog
 import com.example.onepercent.ui.components.HeatMapCalendar
 import com.example.onepercent.ui.components.HeatMapEntry
@@ -28,7 +32,7 @@ import java.time.LocalDate
 @Composable
 fun DashboardScreenUi(
     viewModel: TaskViewModel,
-    onNavigateToHistory: () -> Unit
+    backStack: NavBackStack<NavKey>
 ) {
     val priorityTasks by viewModel.priorityTask.collectAsState()
     val normalTasks by viewModel.normalTask.collectAsState()
@@ -47,8 +51,6 @@ fun DashboardScreenUi(
                 )
             }
     }
-
-//session
     Scaffold(
         topBar = {
             TopAppBar(
@@ -60,6 +62,11 @@ fun DashboardScreenUi(
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+                },
+                actions = {
+                    TextButton(onClick = { /*backStack.add(ArchiveScreen())*/ }) {
+                        Text("Archived", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -202,7 +209,7 @@ fun DashboardScreenUi(
             }
             item {
                 TextButton(
-                    onClick = onNavigateToHistory
+                    onClick = {backStack.add(HistoryScreen())}
                 ) {
                     Text("View History")
                 }

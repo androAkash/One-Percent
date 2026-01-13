@@ -11,13 +11,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import com.example.onepercent.ui.components.HistoryTaskItem
 import com.example.onepercent.ui.viewModel.TaskViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreenUi(
     viewModel: TaskViewModel,
-    onBack: () -> Unit
+    backStack: NavBackStack<NavKey>
 ) {
     val completedTasks by viewModel.completedNormalTasks.collectAsState()
 
@@ -26,7 +28,7 @@ fun HistoryScreenUi(
             TopAppBar(
                 title = { Text("History") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { backStack.removeLastOrNull() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = null)
                     }
                 }

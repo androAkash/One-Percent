@@ -65,8 +65,11 @@ fun DashboardScreenUi(
                     }
                 },
                 actions = {
-                    TextButton(onClick = { /*backStack.add(ArchiveScreen())*/ }) {
+                    /*TextButton(onClick = { *//*backStack.add(ArchiveScreen())*//* }) {
                         Text("Archived", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }*/
+                    TextButton(onClick = { viewModel.forceResetPriorityTasks() }) {
+                        Text("Reset Now", color = MaterialTheme.colorScheme.error)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

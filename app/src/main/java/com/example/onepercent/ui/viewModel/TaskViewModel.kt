@@ -9,9 +9,13 @@ import com.example.onepercent.local.repository.TaskRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZonedDateTime
 
 
 class TaskViewModel(val repository: TaskRepository): ViewModel() {
@@ -26,6 +30,13 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
     private val _priorityCompletions = MutableStateFlow<List<PriorityTaskEntity>>(emptyList())
     val priorityCompletions: StateFlow<List<PriorityTaskEntity>> = _priorityCompletions.asStateFlow()
 
+    private val RESET_HOUR = 22 // 0 = midnight (00:00), 20 = 8 PM, etc.
+    private val RESET_MINUTE = 7
+
+    // Store the last reset period timestamp, not just "today"
+    private var lastResetPeriod: Long? = null
+
+
     init {
         loadPriorityTask()
         loadNormalTask()
@@ -36,12 +47,52 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
                 _priorityCompletions.value = completions
             }
         }
-        checkAndResetPriorityTasks()
+        viewModelScope.launch {
+            // Wait for priority tasks to load
+            _priorityTask.first { it.isNotEmpty() }
+            normalizeTasksIfDayChanged()
+        }
+    }
+
+    fun normalizeTasksIfDayChanged() {
+        viewModelScope.launch {
+            val currentResetPeriod = getCurrentResetPeriod()
+
+            // Check if we've entered a new reset period
+            if (lastResetPeriod == currentResetPeriod) return@launch
+
+            lastResetPeriod = currentResetPeriod
+
+            normalizePriorityTasks(currentResetPeriod)
+        }
+    }
+
+    private suspend fun normalizePriorityTasks(currentResetPeriod: Long) {
+        val currentTasks = _priorityTask.value
+
+        currentTasks.forEach { task ->
+            if (task.isCompleted) {
+                val completedDate = task.completedDate ?: return@forEach
+                val completedResetPeriod = getResetPeriodForTimestamp(completedDate)
+                if (completedResetPeriod < currentResetPeriod) {
+                    repository.update(
+                        task.copy(
+                            isCompleted = false,
+                            completedDate = null
+                        )
+                    )
+                }
+            }
+        }
     }
 
     private fun loadPriorityTask(){
         viewModelScope.launch {
             repository.priorityTasks.collect { tasks ->
+                println("🔵 Priority tasks updated: ${tasks.size} tasks")
+                tasks.forEach {
+                    println("  - ${it.name}: isCompleted=${it.isCompleted}")
+                }
                 _priorityTask.value = tasks
             }
         }
@@ -69,19 +120,21 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
             repository.insert(task)
         }
     }
+
     fun updateTask(taskEntity: TaskEntity){
         viewModelScope.launch {
             repository.update(taskEntity)
         }
     }
+
     private suspend fun togglePriorityTaskCompletion(task: TaskEntity) {
-        val today = getTodayAtMidnight()
-        val existingCompletion = repository.getCompletionForTaskOnDate(task.id, today)
+        val currentResetPeriod = getCurrentResetPeriod()
+        val existingCompletion = repository.getCompletionForTaskOnDate(task.id, currentResetPeriod)
 
         if (task.isCompleted) {
             // Unchecking - remove completion record
             if (existingCompletion != null) {
-                repository.deleteCompletionForTaskOnDate(task.id, today)
+                repository.deleteCompletionForTaskOnDate(task.id, currentResetPeriod)
             }
             val updatedTask = task.copy(isCompleted = false, completedDate = null)
             repository.update(updatedTask)
@@ -90,13 +143,14 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
             val completion = PriorityTaskEntity(
                 taskId = task.id,
                 taskName = task.name,
-                completedDate = today
+                completedDate = currentResetPeriod
             )
             repository.insertCompletion(completion)
             val updatedTask = task.copy(isCompleted = true, completedDate = System.currentTimeMillis())
             repository.update(updatedTask)
         }
     }
+
     fun toggleTaskCompletion(task: TaskEntity) {
         viewModelScope.launch {
             if (task.isPriority) {
@@ -111,50 +165,79 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
             }
         }
     }
+
     fun deleteTask(taskEntity: TaskEntity){
         viewModelScope.launch {
             repository.delete(taskEntity)
         }
     }
 
-    private fun checkAndResetPriorityTasks() {
+    fun forceResetPriorityTasks() {
         viewModelScope.launch {
-            val today = getTodayAtMidnight()
-            val tasks = _priorityTask.value
-
-            tasks.forEach { task ->
+            val currentTasks = _priorityTask.value
+            currentTasks.forEach { task ->
                 if (task.isCompleted) {
-                    val completedDate = task.completedDate ?: return@forEach
-                    val completedDay = getDateAtMidnight(completedDate)
-
-                    // If task was completed on a different day, reset it
-                    if (completedDay < today) {
-                        val resetTask = task.copy(isCompleted = false, completedDate = null)
-                        repository.update(resetTask)
-                    }
+                    repository.update(
+                        task.copy(
+                            isCompleted = false,
+                            completedDate = null
+                        )
+                    )
                 }
             }
         }
     }
+
     fun clearHeatmapData() {
         viewModelScope.launch {
             repository.clearAllCompletions()
         }
     }
-    private fun getTodayAtMidnight(): Long {
-        return LocalDate.now()
-            .atStartOfDay(ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli()
+
+    /**
+     * Get the current reset period timestamp.
+     * This represents the most recent reset time that has passed.
+     *
+     * Example with RESET_HOUR = 22 (10 PM):
+     * - If current time is Jan 15, 9 PM → returns Jan 14, 10 PM
+     * - If current time is Jan 15, 11 PM → returns Jan 15, 10 PM
+     * - If current time is Jan 16, 1 AM → returns Jan 15, 10 PM
+     */
+    private fun getCurrentResetPeriod(): Long {
+        val now = ZonedDateTime.now(ZoneId.systemDefault())
+        val todayReset = now.toLocalDate().atTime(RESET_HOUR, RESET_MINUTE)
+            .atZone(ZoneId.systemDefault())
+
+        return if (now.isBefore(todayReset)) {
+            // Before today's reset time, use yesterday's reset
+            todayReset.minusDays(1).toInstant().toEpochMilli()
+        } else {
+            // After today's reset time, use today's reset
+            todayReset.toInstant().toEpochMilli()
+        }
     }
 
-    private fun getDateAtMidnight(timestamp: Long): Long {
-        return java.time.Instant.ofEpochMilli(timestamp)
+    /**
+     * Get which reset period a timestamp belongs to.
+     *
+     * Example with RESET_HOUR = 22 (10 PM):
+     * - Jan 15, 9 PM → belongs to Jan 14, 10 PM period
+     * - Jan 15, 11 PM → belongs to Jan 15, 10 PM period
+     */
+    private fun getResetPeriodForTimestamp(timestamp: Long): Long {
+        val time = Instant.ofEpochMilli(timestamp)
             .atZone(ZoneId.systemDefault())
-            .toLocalDate()
-            .atStartOfDay(ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli()
+
+        val dateReset = time.toLocalDate().atTime(RESET_HOUR, RESET_MINUTE)
+            .atZone(ZoneId.systemDefault())
+
+        return if (time.isBefore(dateReset)) {
+            // Before that day's reset time, belongs to previous day's period
+            dateReset.minusDays(1).toInstant().toEpochMilli()
+        } else {
+            // After that day's reset time, belongs to that day's period
+            dateReset.toInstant().toEpochMilli()
+        }
     }
 }
 class TaskViewModelFactory(private val repository: TaskRepository) : ViewModelProvider.Factory {

@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -18,6 +19,7 @@ fun TaskItem(
     task: TaskEntity,
     index: Int,
     totalCount: Int,
+    pendingDays: Int = 0, // Add this parameter
     onDelete: () -> Unit,
     onToggleComplete: (() -> Unit)?
 ) {
@@ -51,19 +53,34 @@ fun TaskItem(
                     onCheckedChange = { onToggleComplete() }
                 )
             }
-            Text(
-                text = task.name,
-                fontSize = 16.sp,
-                modifier = Modifier.weight(1f),
-                style = if (task.isCompleted) {
-                    MaterialTheme.typography.bodyLarge.copy(
-                        textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = task.name,
+                    fontSize = 16.sp,
+                    style = if (task.isCompleted) {
+                        MaterialTheme.typography.bodyLarge.copy(
+                            textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        MaterialTheme.typography.bodyLarge
+                    }
+                )
+
+                // Show pending status for normal tasks
+                if (!task.isPriority && !task.isCompleted && pendingDays > 0) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = when (pendingDays) {
+                            1 -> "Pending from yesterday"
+                            else -> "Pending for $pendingDays days"
+                        },
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.error,
+                        fontStyle = FontStyle.Italic
                     )
-                } else {
-                    MaterialTheme.typography.bodyLarge
                 }
-            )
+            }
             TextButton(onClick = onDelete) {
                 Text("Delete", color = MaterialTheme.colorScheme.error)
             }

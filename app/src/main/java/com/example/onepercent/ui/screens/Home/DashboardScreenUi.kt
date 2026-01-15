@@ -41,6 +41,9 @@ fun DashboardScreenUi(
     var isHeatMapExpanded by remember { mutableStateOf(true) }
     var showDialog by remember { mutableStateOf(false) }
 
+    // Add this to recalculate when time changes
+    val currentTime by rememberUpdatedState(System.currentTimeMillis())
+
     val heatMapData = remember(priorityCompletions) {
         priorityCompletions
             .groupBy { it.completedDate }
@@ -51,6 +54,7 @@ fun DashboardScreenUi(
                 )
             }
     }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -65,9 +69,6 @@ fun DashboardScreenUi(
                     }
                 },
                 actions = {
-                    /*TextButton(onClick = { *//*backStack.add(ArchiveScreen())*//* }) {
-                        Text("Archived", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }*/
                     TextButton(onClick = { viewModel.forceResetPriorityTasks() }) {
                         Text("Reset Now", color = MaterialTheme.colorScheme.error)
                     }
@@ -113,10 +114,16 @@ fun DashboardScreenUi(
                 }
             } else {
                 itemsIndexed(priorityTasks) { index, task ->
+                    // Calculate pending days for priority tasks too!
+                    val pendingDays = remember(task.createdDate, currentTime) {
+                        viewModel.calculatePendingDays(task.createdDate)
+                    }
+
                     TaskItem(
                         task = task,
                         index = index,
                         totalCount = priorityTasks.size,
+                        pendingDays = pendingDays, // Now it calculates correctly!
                         onDelete = { viewModel.deleteTask(task) },
                         onToggleComplete = { viewModel.toggleTaskCompletion(task) }
                     )
@@ -201,15 +208,21 @@ fun DashboardScreenUi(
                 }
             } else {
                 itemsIndexed(normalTasks) { index, task ->
+                    val pendingDays = remember(task.createdDate, currentTime) {
+                        viewModel.calculatePendingDays(task.createdDate)
+                    }
+
                     TaskItem(
                         task = task,
                         index = index,
                         totalCount = normalTasks.size,
+                        pendingDays = pendingDays,
                         onDelete = { viewModel.deleteTask(task) },
                         onToggleComplete = { viewModel.toggleTaskCompletion(task) }
                     )
                 }
             }
+
             item {
                 TextButton(
                     onClick = {backStack.add(HistoryScreen())}

@@ -36,7 +36,7 @@ fun DashboardScreenUi(
 ) {
     val priorityTasks by viewModel.priorityTask.collectAsState()
     val normalTasks by viewModel.normalTask.collectAsState()
-    val priorityCompletions by viewModel.priorityCompletions.collectAsState()
+    val priorityCompletions by viewModel.completionHistory.collectAsState()
 
     var isHeatMapExpanded by remember { mutableStateOf(true) }
     var showDialog by remember { mutableStateOf(false) }
@@ -206,7 +206,8 @@ fun DashboardScreenUi(
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
-            } else {
+            }
+            else {
                 itemsIndexed(normalTasks) { index, task ->
                     val pendingDays = remember(task.createdDate, currentTime) {
                         viewModel.calculatePendingDays(task.createdDate)

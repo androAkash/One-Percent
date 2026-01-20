@@ -15,7 +15,7 @@ interface TaskDao {
     fun getAllTasks(): Flow<List<TaskEntity>>
 
     @Query("SELECT * FROM tasks WHERE isPriority = 1 ORDER BY createdDate ASC")
-    fun getPriorityTasks(): Flow<List<TaskEntity>>
+    fun getPriorityTasks(): Flow<List<TaskEntity>> //TODO: why it is existed
 
     @Query("SELECT * FROM tasks WHERE isPriority= 0 ORDER BY createdDate ASC")
     fun getNormalTasks(): Flow<List<TaskEntity>>

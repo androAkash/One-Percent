@@ -6,10 +6,10 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.onepercent.local.dao.PriorityTaskDao
 import com.example.onepercent.local.dao.TaskDao
-import com.example.onepercent.local.entity.PriorityTaskEntity
+import com.example.onepercent.local.entity.TaskCompletionEntity
 import com.example.onepercent.local.entity.TaskEntity
 
-@Database(entities = [TaskEntity::class, PriorityTaskEntity::class], version = 4, exportSchema = false)
+@Database(entities = [TaskEntity::class, TaskCompletionEntity::class], version = 4, exportSchema = false)
 abstract class TaskDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun priorityCompletionDao(): PriorityTaskDao

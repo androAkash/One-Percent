@@ -28,6 +28,7 @@ import com.example.onepercent.ui.screens.Home.HistoryScreenUi
 import com.example.onepercent.ui.theme.OnePercentTheme
 import com.example.onepercent.ui.viewModel.TaskViewModel
 import com.example.onepercent.ui.viewModel.TaskViewModelFactory
+import com.example.onepercent.utils.scheduleDailyReset
 
 class MainActivity : ComponentActivity() {
     private val viewModel: TaskViewModel by viewModels {
@@ -39,6 +40,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        scheduleDailyReset(applicationContext)
         setContent {
             OnePercentTheme {
                 val backStack = rememberNavBackStack(DashboardScreen())
@@ -80,9 +82,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    override fun onResume() {
-        super.onResume()
-        viewModel.normalizeTasksIfDayChanged()
-    }
-
 }

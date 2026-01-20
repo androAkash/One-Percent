@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "priority_task")
-data class PriorityTaskEntity(
+data class TaskCompletionEntity(
     @PrimaryKey(autoGenerate = true)
     val id:Int=0,
     val taskName:String,

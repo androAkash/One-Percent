@@ -39,54 +39,7 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
         viewModelScope.launch {
             repository.checkAndResetPriorityTasks()
         }
-        startMidnightTimer()
     }
-
-    private fun startMidnightTimer() {
-        viewModelScope.launch {
-            // Calculate time until next midnight
-            val now = LocalDateTime.now()
-            val tomorrow = LocalDate.now().plusDays(1).atStartOfDay()
-            val delayMillis = java.time.Duration.between(now, tomorrow).toMillis()
-
-            // Wait until midnight
-            delay(delayMillis)
-
-            // TRIGGER THE RESET
-            repository.checkAndResetPriorityTasks()
-
-            // Optional: Restart timer for the next day (if user keeps app open for 24h)
-            startMidnightTimer()
-        }
-    }
-    // SIMPLIFIED: Just check if completed date is today or not
-    private suspend fun resetPriorityTasksIfNeeded() {
-        val tasks = repository.priorityTasks.first()
-        val today = LocalDate.now()
-
-        tasks.forEach { task ->
-            if (task.isCompleted && !isCompletedToday(task.completedDate, today)) {
-                repository.update(
-                    task.copy(
-                        isCompleted = false,
-                        completedDate = null
-                    )
-                )
-            }
-        }
-    }
-
-    // SIMPLIFIED: Clear yes/no question instead of period comparison
-    private fun isCompletedToday(completedTimestamp: Long?, today: LocalDate = LocalDate.now()): Boolean {
-        if (completedTimestamp == null) return false
-
-        val completedDate = Instant.ofEpochMilli(completedTimestamp)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate()
-
-        return completedDate == today
-    }
-
     private fun loadPriorityTask(){
         viewModelScope.launch {
             repository.priorityTasks.collect { tasks ->
@@ -94,7 +47,6 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
             }
         }
     }
-
     private fun loadNormalTask(){
         viewModelScope.launch {
             repository.normalTasks.collect { tasks ->
@@ -102,7 +54,6 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
             }
         }
     }
-
     private fun loadCompletedNormalTask(){
         viewModelScope.launch {
             repository.completedNormalTasks.collect { tasks ->
@@ -110,7 +61,6 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
             }
         }
     }
-
     private fun loadCompletionHistory(){
         viewModelScope.launch {
             repository.allCompletions.collect { completions ->
@@ -118,20 +68,17 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
             }
         }
     }
-
     fun addTask(name: String, isPriority: Boolean){
         viewModelScope.launch {
             val task = TaskEntity(name = name, isPriority = isPriority)
             repository.insert(task)
         }
     }
-
     fun updateTask(taskEntity: TaskEntity){
         viewModelScope.launch {
             repository.update(taskEntity)
         }
     }
-
     private suspend fun togglePriorityTaskCompletion(task: TaskEntity) {
         val today = getDateKey(System.currentTimeMillis())
         val existingCompletion = repository.getCompletionForTaskOnDate(task.id, today)
@@ -153,7 +100,6 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
             repository.update(task.copy(isCompleted = true, completedDate = System.currentTimeMillis()))
         }
     }
-
     fun toggleTaskCompletion(task: TaskEntity) {
         viewModelScope.launch {
             if (task.isPriority) {
@@ -167,26 +113,17 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
             }
         }
     }
-
     fun deleteTask(taskEntity: TaskEntity){
         viewModelScope.launch {
             repository.delete(taskEntity)
         }
     }
-
-    fun forceResetPriorityTasks() {
-        viewModelScope.launch {
-            resetPriorityTasksIfNeeded()
-        }
-    }
-
     fun clearHeatmapData() {
         viewModelScope.launch {
             repository.clearAllCompletions()
         }
     }
 
-    // SIMPLIFIED: Calculate days between two LocalDates instead of periods
     fun calculatePendingDays(taskCreatedDate: Long): Int {
         val createdDate = Instant.ofEpochMilli(taskCreatedDate)
             .atZone(ZoneId.systemDefault())
@@ -197,7 +134,6 @@ class TaskViewModel(val repository: TaskRepository): ViewModel() {
         return java.time.Period.between(createdDate, today).days.coerceAtLeast(0)
     }
 
-    // SIMPLIFIED: Just get today's date key for heatmap storage
     private fun getDateKey(timestamp: Long = System.currentTimeMillis()): Long {
         return Instant.ofEpochMilli(timestamp)
             .atZone(ZoneId.systemDefault())

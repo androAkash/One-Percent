@@ -1,6 +1,6 @@
 package com.example.onepercent.local.repository
 
-import com.example.onepercent.local.dao.PriorityTaskDao
+import com.example.onepercent.local.dao.TaskCompletionDao
 import com.example.onepercent.local.dao.TaskDao
 import com.example.onepercent.local.entity.TaskCompletionEntity
 import com.example.onepercent.local.entity.TaskEntity
@@ -12,13 +12,13 @@ import java.time.ZoneId
 
 class TaskRepository(
     private val taskDao: TaskDao,
-    private val priorityTaskDao: PriorityTaskDao
+    private val taskCompletionDao: TaskCompletionDao
 ) {
     val allTask : Flow<List<TaskEntity>> = taskDao.getAllTasks() //TODO: Dont know the meaning of this variable
     val priorityTasks: Flow<List<TaskEntity>> = taskDao.getPriorityTasks()
     val normalTasks: Flow<List<TaskEntity>> = taskDao.getNormalTasks()
     val completedNormalTasks: Flow<List<TaskEntity>> = taskDao.getCompletedNormalTasks()
-    val allCompletions: Flow<List<TaskCompletionEntity>> = priorityTaskDao.getAllCompletions() //TODO:  May be priorityTaskCompleted
+    val allCompletions: Flow<List<TaskCompletionEntity>> = taskCompletionDao.getAllCompletions() //TODO:  May be priorityTaskCompleted
 
     suspend fun checkAndResetPriorityTasks() {
         val tasks = taskDao.getPriorityTasks().first()
@@ -49,13 +49,13 @@ class TaskRepository(
         taskDao.updateTask(taskEntity)
     }
     suspend fun insertCompletion(completion: TaskCompletionEntity) {
-        priorityTaskDao.insertCompletion(completion)
+        taskCompletionDao.insertCompletion(completion)
     }
     suspend fun deleteCompletionForTaskOnDate(taskId: Int, date: Long) {
-        priorityTaskDao.deleteCompletionForTaskOnDate(taskId, date)
+        taskCompletionDao.deleteCompletionForTaskOnDate(taskId, date)
     }
     suspend fun getCompletionForTaskOnDate(taskId: Int, date: Long): TaskCompletionEntity? {
-        return priorityTaskDao.getCompletionForTaskOnDate(taskId, date)
+        return taskCompletionDao.getCompletionForTaskOnDate(taskId, date)
     }
     suspend fun delete(taskEntity: TaskEntity){
         taskDao.deleteTask(taskEntity)
@@ -64,6 +64,6 @@ class TaskRepository(
         taskDao.deleteAll()
     }
     suspend fun clearAllCompletions() {
-        priorityTaskDao.clearAllCompletions()
+        taskCompletionDao.clearAllCompletions()
     }
 }

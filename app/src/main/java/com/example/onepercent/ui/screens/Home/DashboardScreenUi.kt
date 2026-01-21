@@ -41,7 +41,6 @@ fun DashboardScreenUi(
     var isHeatMapExpanded by remember { mutableStateOf(true) }
     var showDialog by remember { mutableStateOf(false) }
 
-    // Add this to recalculate when time changes
     val currentTime by rememberUpdatedState(System.currentTimeMillis())
 
     val heatMapData = remember(priorityCompletions) {
@@ -68,11 +67,7 @@ fun DashboardScreenUi(
                         )
                     }
                 },
-                actions = {
-                    TextButton(onClick = { viewModel.forceResetPriorityTasks() }) {
-                        Text("Reset Now", color = MaterialTheme.colorScheme.error)
-                    }
-                },
+                actions = {},
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
@@ -94,7 +89,6 @@ fun DashboardScreenUi(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
-            // Priority Tasks Section
             item {
                 Text(
                     text = "Priority Tasks",
@@ -114,7 +108,6 @@ fun DashboardScreenUi(
                 }
             } else {
                 itemsIndexed(priorityTasks) { index, task ->
-                    // Calculate pending days for priority tasks too!
                     val pendingDays = remember(task.createdDate, currentTime) {
                         viewModel.calculatePendingDays(task.createdDate)
                     }
@@ -123,7 +116,7 @@ fun DashboardScreenUi(
                         task = task,
                         index = index,
                         totalCount = priorityTasks.size,
-                        pendingDays = pendingDays, // Now it calculates correctly!
+                        pendingDays = pendingDays,
                         onDelete = { viewModel.deleteTask(task) },
                         onToggleComplete = { viewModel.toggleTaskCompletion(task) }
                     )

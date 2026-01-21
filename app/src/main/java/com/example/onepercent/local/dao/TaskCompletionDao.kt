@@ -7,7 +7,7 @@ import androidx.room.Query
 import com.example.onepercent.local.entity.TaskCompletionEntity
 import kotlinx.coroutines.flow.Flow
 @Dao
-interface PriorityTaskDao {
+interface TaskCompletionDao {
     @Insert
     suspend fun insertCompletion(completion: TaskCompletionEntity)
     @Delete

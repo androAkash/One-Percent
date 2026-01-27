@@ -37,6 +37,7 @@ class MainActivity : ComponentActivity() {
             database.priorityCompletionDao())
         TaskViewModelFactory(repository)
     }
+    //TODO:- WILL START NOTIFICATION MANAGER
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

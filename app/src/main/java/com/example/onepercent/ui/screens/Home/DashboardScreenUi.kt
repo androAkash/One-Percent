@@ -230,10 +230,10 @@ fun DashboardScreenUi(
     if (showDialog) {
         AddTaskDialog(
             onDismiss = { showDialog = false },
-            onConfirm = { name, isPriority ->
+            onConfirm = { name, isPriority, hour, minute ->
                 viewModel.addTask(name, isPriority)
                 showDialog = false
-            }
+            },
         )
     }
 }

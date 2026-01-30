@@ -8,6 +8,9 @@
       <SelectionState runConfigName="HeatMapCalendarPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
+      <SelectionState runConfigName="PriorityTaskTimePickerDialogPreview">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
     </selectionStates>
   </component>
 </project>

@@ -11,5 +11,8 @@ data class TaskEntity(
     val isPriority : Boolean,
     val isCompleted: Boolean = false,
     val completedDate: Long? = null,
-    val createdDate: Long = System.currentTimeMillis()
+    val createdDate: Long = System.currentTimeMillis(),
+    val isReminderEnabled: Boolean = false,
+    val reminderHour: Int? = null,
+    val reminderMinute: Int? = null
 )

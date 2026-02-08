@@ -9,7 +9,7 @@ import com.example.onepercent.local.dao.TaskDao
 import com.example.onepercent.local.entity.TaskCompletionEntity
 import com.example.onepercent.local.entity.TaskEntity
 
-@Database(entities = [TaskEntity::class, TaskCompletionEntity::class], version = 4, exportSchema = false)
+@Database(entities = [TaskEntity::class, TaskCompletionEntity::class], version = 5, exportSchema = false)
 abstract class TaskDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun priorityCompletionDao(): TaskCompletionDao

@@ -2,6 +2,8 @@ package com.example.onepercent.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,6 +15,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.onepercent.local.entity.TaskEntity
+import com.example.onepercent.local.entity.getFormattedReminderTime
 
 @Composable
 fun TaskItem(
@@ -53,19 +56,49 @@ fun TaskItem(
                     onCheckedChange = { onToggleComplete() }
                 )
             }
+
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = task.name,
-                    fontSize = 16.sp,
-                    style = if (task.isCompleted) {
-                        MaterialTheme.typography.bodyLarge.copy(
-                            textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = task.name,
+                        fontSize = 16.sp,
+                        style = if (task.isCompleted) {
+                            MaterialTheme.typography.bodyLarge.copy(
+                                textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            MaterialTheme.typography.bodyLarge
+                        },
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+
+                    // Show reminder icon for priority tasks with reminder enabled
+                    if (task.isPriority && task.isReminderEnabled) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Reminder enabled",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
                         )
-                    } else {
-                        MaterialTheme.typography.bodyLarge
                     }
-                )
+                }
+
+                // Show reminder time if enabled
+                if (task.isPriority && task.isReminderEnabled) {
+                    task.getFormattedReminderTime()?.let { timeStr ->
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "🔔 Daily at $timeStr",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontStyle = FontStyle.Italic
+                        )
+                    }
+                }
 
                 // Show pending status for normal tasks
                 if (!task.isPriority && !task.isCompleted && pendingDays > 0) {
@@ -81,6 +114,7 @@ fun TaskItem(
                     )
                 }
             }
+
             TextButton(onClick = onDelete) {
                 Text("Delete", color = MaterialTheme.colorScheme.error)
             }

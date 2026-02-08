@@ -11,7 +11,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 class TaskRepository(
-    private val taskDao: TaskDao,
+    val taskDao: TaskDao,
     private val taskCompletionDao: TaskCompletionDao
 ) {
     val allTask : Flow<List<TaskEntity>> = taskDao.getAllTasks() //TODO: Dont know the meaning of this variable
@@ -42,8 +42,8 @@ class TaskRepository(
             .toLocalDate()
         return completedDate == today
     }
-    suspend fun insert(taskEntity: TaskEntity){
-        taskDao.insertTask(taskEntity)
+    suspend fun insert(taskEntity: TaskEntity): Long{
+        return taskDao.insertTask(taskEntity)
     }
     suspend fun update(taskEntity: TaskEntity){
         taskDao.updateTask(taskEntity)
